@@ -31,7 +31,10 @@ def predict():
 
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
-        parasite_count = int(request.form.get('parasite_count', 0))
+        # Safe conversion to int if filled, otherwise 0
+        parasite_count_str = request.form.get('parasite_count', '').strip()
+        parasite_count = int(parasite_count_str) if parasite_count_str.isdigit() else 0
+
 
         # Input features
         input_data = {
