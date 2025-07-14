@@ -1,28 +1,28 @@
 from flask import Flask, render_template, request
-import pickle
-import numpy as np
+import joblib
+import pandas as pd
+from collections import deque
 
 app = Flask(__name__)
 
-# Load trained model
-model = pickle.load(open('Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl', 'rb'))
+# Load model and features
+model = joblib.load("Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl")
+features = joblib.load("feature_columns.pkl")
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# Store last 5 predictions
+last_predictions = deque(maxlen=5)
 
-@app.route('/predict', methods=['POST'])
+@app.route('/', methods=['GET', 'POST'])
 def predict():
-    try:
-        # Collect form data
-        age = int(request.form['age'])
-        fever = int(request.form['fever'])
-        headache = int(request.form['headache'])
-        vomiting = int(request.form['vomiting'])
-        rdt = int(request.form['rdt'])
+    result = None
+    severity = None
 
-        # Combine features for prediction (excluding parasite count & microscopy)
-        features = np.array([[age, fever, headache, vomiting, rdt]])
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        # Safe conversion to int if filled, otherwise 0
+        
+
+
         # Input features
         input_data = {
             'age': int(request.form['age']),
@@ -42,21 +42,19 @@ def predict():
             'gender_Male': 1 if request.form['gender'] == 'Male' else 0
         }
 
-        # Predict using model
-        prediction = model.predict(features)[0]
+        # Prepare for model
+        input_df = pd.DataFrame([input_data])[features]
+        prediction = model.predict(input_df)[0]
+        result = "🦠 Malaria Detected" if prediction == 1 else "✅ No Malaria"
 
-        # Result message
-        if prediction == 1:
-            result = "Malaria Detected"
-            alert = "⚠️ Medical attention is advised!"
-        else:
-            result = "No Malaria"
-            alert = ""
+        # Save to history
+        last_predictions.appendleft({
+            'name': name if name else None,
+            'result': result,
+            'severity': severity
+        })
 
-        return render_template('index.html', result=result, alert=alert)
-
-    except Exception as e:
-        return f"An error occurred: {e}"
+    return render_template('form.html', result=result, severity=severity, history=list(last_predictions))
 
 if __name__ == '__main__':
     app.run(debug=True)
