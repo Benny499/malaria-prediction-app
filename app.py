@@ -1,14 +1,17 @@
 from flask import Flask, render_template, request
 import joblib
 import pandas as pd
+from collections import deque
 
 app = Flask(__name__)
 
-# Load model and feature columns
+# Load model and features
 model = joblib.load("malaria_classifier_model.pkl")
 features = joblib.load("feature_columns.pkl")
 
-# Severity classifier
+# Store last 5 predictions
+last_predictions = deque(maxlen=5)
+
 def classify_severity(parasite_count):
     if parasite_count < 1000:
         return "Mild"
@@ -23,20 +26,14 @@ def classify_severity(parasite_count):
 
 @app.route('/', methods=['GET', 'POST'])
 def predict():
+    result = None
+    severity = None
+
     if request.method == 'POST':
-        # Get diagnosis method and parasite count for severity
-        diagnosis_method = request.form.get('diagnosis_method')
-        parasite_count = request.form.get('parasite_count')
+        name = request.form.get('name', '').strip()
+        parasite_count = int(request.form.get('parasite_count', 0))
 
-        severity = None
-        if diagnosis_method == "Microscopy" and parasite_count:
-            try:
-                parasite_count = int(parasite_count)
-                severity = classify_severity(parasite_count)
-            except:
-                severity = "Invalid input"
-
-        # Collect model input
+        # Input features
         input_data = {
             'age': int(request.form['age']),
             'body_temperature': float(request.form['temperature']),
@@ -50,20 +47,29 @@ def predict():
             'nausea': int('nausea' in request.form),
             'diarrhea': int('diarrhea' in request.form),
             'anemia': int('anemia' in request.form),
-            'parasite_count': int(request.form['parasite_count']) if 'parasite_count' in request.form and request.form['parasite_count'] else 0,
+            'parasite_count': parasite_count,
             'rapid_diagnostic_test': int('rdt' in request.form),
             'microscopy_result': int('microscopy' in request.form),
             'gender_Male': 1 if request.form['gender'] == 'Male' else 0
         }
 
-        # Create DataFrame and align with model
+        # Prepare for model
         input_df = pd.DataFrame([input_data])[features]
         prediction = model.predict(input_df)[0]
         result = "🦠 Malaria Detected" if prediction == 1 else "✅ No Malaria"
 
-        return render_template('form.html', result=result, severity=severity)
+        # Classify severity
+        if parasite_count > 0:
+            severity = classify_severity(parasite_count)
 
-    return render_template('form.html', result=None, severity=None)
+        # Save to history
+        last_predictions.appendleft({
+            'name': name if name else None,
+            'result': result,
+            'severity': severity
+        })
+
+    return render_template('form.html', result=result, severity=severity, history=list(last_predictions))
 
 if __name__ == '__main__':
     app.run(debug=True)
