@@ -6,7 +6,7 @@ from collections import deque
 app = Flask(__name__)
 
 # Load model and features
-model = joblib.load("malaria_classifier_model.pkl")
+model = joblib.load("Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl")
 features = joblib.load("feature_columns.pkl")
 
 # Store last 5 predictions
