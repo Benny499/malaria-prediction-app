@@ -5,7 +5,7 @@ import pickle
 app = Flask(__name__)
 
 # Load your model and feature columns
-model = pickle.load(open('your_model.pkl', 'rb'))
+model = pickle.load(open('Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl', 'rb'))
 with open('feature_columns.pkl', 'rb') as f:
     feature_columns = pickle.load(f)
 
