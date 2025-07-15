@@ -76,3 +76,4 @@ def reset():
     recent_predictions.clear()
     return redirect('/')
 
+
