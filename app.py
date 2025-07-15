@@ -1,30 +1,28 @@
-from flask import Flask, render_template, request
-import numpy as np
-import pandas as pd
+from flask import Flask, render_template, request, session, redirect, url_for
 import pickle
+import pandas as pd
+import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # For session storage
 
-# Load model and features
+# Load model and feature columns
 model = pickle.load(open('Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl', 'rb'))
-feature_columns = pickle.load(open('feature_columns.pkl', 'rb'))  # Should contain ['age', 'fever', 'headache', 'vomiting', 'rdt']
+feature_columns = pickle.load(open('feature_columns.pkl', 'rb'))
 
 @app.route('/')
 def home():
-    return render_template('form.html')
+    predictions = session.get('predictions', [])
+    return render_template('form.html', predictions=predictions, result=None, alert=None, dark=False)
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    name = request.form.get('name', 'Anonymous')
+    
     try:
-        # Build input dictionary based on feature columns
-        input_data = {}
-        for col in feature_columns:
-            input_data[col] = int(request.form[col])
-
-        input_df = pd.DataFrame([input_data])
-
-        # Predict
-        prediction = model.predict(input_df)[0]
+        input_data = {col: int(request.form[col]) for col in feature_columns}
+        df = pd.DataFrame([input_data])
+        prediction = model.predict(df)[0]
 
         if prediction == 1:
             result = "Malaria Detected"
@@ -33,10 +31,26 @@ def predict():
             result = "No Malaria"
             alert = ""
 
-        return render_template('index.html', result=result, alert=alert)
+        # Save last 5 predictions in session
+        new_record = {
+            "name": name,
+            "result": result,
+            "alert": alert
+        }
+
+        history = session.get('predictions', [])
+        history.insert(0, new_record)
+        session['predictions'] = history[:5]  # Keep only 5
+
+        return render_template("form.html", result=result, alert=alert, predictions=session['predictions'], dark=False)
 
     except Exception as e:
-        return f"An error occurred: {e}"
+        return f"Error: {e}"
+
+@app.route('/reset')
+def reset():
+    session.pop('predictions', None)
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
