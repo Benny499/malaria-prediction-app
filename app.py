@@ -1,56 +1,60 @@
-from flask import Flask, render_template, request, session, redirect, url_for
-import pickle
+from flask import Flask, render_template, request, jsonify, redirect
 import pandas as pd
-import os
+import pickle
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # For session storage
 
-# Load model and feature columns
-model = pickle.load(open('Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl', 'rb'))
-feature_columns = pickle.load(open('feature_columns.pkl', 'rb'))
+# Load your model and feature columns
+model = pickle.load(open('your_model.pkl', 'rb'))
+with open('feature_columns.pkl', 'rb') as f:
+    feature_columns = pickle.load(f)
+
+last_predictions = []
 
 @app.route('/')
 def home():
-    predictions = session.get('predictions', [])
-    return render_template('form.html', predictions=predictions, result=None, alert=None, dark=False)
+    return render_template('form.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    name = request.form.get('name', 'Anonymous')
-    
-    try:
-        input_data = {col: int(request.form[col]) for col in feature_columns}
-        df = pd.DataFrame([input_data])
-        prediction = model.predict(df)[0]
+    form = request.form.to_dict()
+    name = form.pop('name', 'Anonymous')
+    age = int(form.get('age', 0))
+    gender = form.get('gender', '')
+    temperature = float(form.get('temperature', 0))
 
-        if prediction == 1:
-            result = "Malaria Detected"
-            alert = "⚠️ Medical attention is advised!"
-        else:
-            result = "No Malaria"
-            alert = ""
+    features = {col: 0 for col in feature_columns}
+    features.update({
+        'age': age,
+        'gender_male': 1 if gender == 'male' else 0,
+        'gender_female': 1 if gender == 'female' else 0,
+        'temperature': temperature
+    })
 
-        # Save last 5 predictions in session
-        new_record = {
-            "name": name,
-            "result": result,
-            "alert": alert
-        }
+    for key in form:
+        if key in features:
+            features[key] = int(form[key])
 
-        history = session.get('predictions', [])
-        history.insert(0, new_record)
-        session['predictions'] = history[:5]  # Keep only 5
+    input_df = pd.DataFrame([features])
+    prediction = model.predict(input_df)[0]
+    result = 'Malaria Detected' if prediction == 1 else 'No Malaria Detected'
+    alert = '⚠️ Malaria has been detected!' if prediction == 1 else '✅ Patient is malaria-free.'
 
-        return render_template("form.html", result=result, alert=alert, predictions=session['predictions'], dark=False)
+    # Store last 5 predictions
+    last_predictions.insert(0, {'name': name, 'result': result, 'alert': alert})
+    if len(last_predictions) > 5:
+        last_predictions.pop()
 
-    except Exception as e:
-        return f"Error: {e}"
+    return jsonify({
+        'result': result,
+        'alert': alert,
+        'predictions': last_predictions
+    })
 
 @app.route('/reset')
 def reset():
-    session.pop('predictions', None)
-    return redirect(url_for('home'))
+    last_predictions.clear()
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)
