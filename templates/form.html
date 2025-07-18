@@ -348,6 +348,7 @@
       if (data.predictions) {
         const tbody = document.getElementById('predictions-body');
         tbody.innerHTML = '';
+        // Ensure backend includes 'timestamp' in each prediction object (e.g., "2025-07-18 03:53:23")
         data.predictions.forEach((p, index) => {
           const row = document.createElement('tr');
           row.innerHTML = `
