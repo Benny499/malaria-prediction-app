@@ -27,8 +27,7 @@ def predict():
         # Initialize input dict
         input_data = {
             'age': age,
-            'gender_male': 1 if gender == 'male' else 0,
-            'gender_female': 1 if gender == 'female' else 0,
+            'gender': 0 if gender == 'male' else 1,
             'temperature': temperature
         }
 
