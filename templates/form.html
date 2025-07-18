@@ -309,6 +309,16 @@
     symptoms.forEach(symptom => {
       if (!formData.has(symptom)) formData.append(symptom, '0');
     });
+    // Capture device local time
+    const localTimestamp = new Date().toLocaleString('en-GB', { 
+      timeZone: 'Africa/Lagos', // WAT time zone
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    }).replace(/,/, '');
     try {
       const response = await fetch('/predict', { method: 'POST', body: formData });
       const data = await response.json();
@@ -348,7 +358,6 @@
       if (data.predictions) {
         const tbody = document.getElementById('predictions-body');
         tbody.innerHTML = '';
-        // Ensure backend includes 'timestamp' in each prediction object (e.g., "2025-07-18 03:53:23")
         data.predictions.forEach((p, index) => {
           const row = document.createElement('tr');
           row.innerHTML = `
@@ -356,7 +365,7 @@
             <td>${p.name}</td>
             <td>${p.result}</td>
             <td>${p.alert}</td>
-            <td>${p.timestamp || 'N/A'}</td>
+            <td>${localTimestamp}</td>
           `;
           tbody.appendChild(row);
         });
