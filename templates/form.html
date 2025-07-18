@@ -12,12 +12,10 @@
       transition: all 0.3s ease;
       font-family: 'Segoe UI', Tahoma, sans-serif;
     }
-
     .dark-mode {
       background: linear-gradient(135deg, #1c1c1c, #0c3a2d);
       color: #e9ecef;
     }
-
     .form-card {
       background: #ffffff;
       border-radius: 1rem;
@@ -25,66 +23,155 @@
       padding: 2rem;
       margin-top: 2rem;
     }
-
     .dark-mode .form-card {
       background: #1e1e1e;
       color: #e9ecef;
     }
-
     .toggle-switch {
       position: fixed;
       top: 1rem;
       right: 1rem;
     }
-
     .transition-icon {
       transition: transform 0.4s ease, opacity 0.4s ease, text-shadow 0.4s ease;
     }
-
     .rotating {
       transform: rotate(180deg);
       opacity: 0.6;
     }
-
     .glow-sun {
       color: gold;
       text-shadow: 0 0 8px gold;
     }
-
     .glow-moon {
       color: #00c4ff;
       text-shadow: 0 0 8px #00c4ff;
     }
-
     .subtitle {
       color: #6c757d;
     }
-
     .dark-mode .subtitle {
       color: #ced4da;
     }
-
-    /* Spinner */
     #loadingSpinner {
       display: none;
       margin-top: 20px;
     }
-
     .spinner-border {
       width: 3rem;
       height: 3rem;
     }
-
-    /* Modal animation */
-    .modal.fade .modal-dialog {
-      transform: scale(0.9) translateY(30px);
-      opacity: 0;
-      transition: all 0.3s ease-in-out;
+    /* Advanced Modal Styles */
+    .modal-content {
+      border: none;
+      border-radius: 1.5rem;
+      background: #ffffff;
+      color: #1b3c35;
+      box-shadow: 0 8px 32px rgba(0, 48, 46, 0.2);
+      overflow: hidden;
+      transition: all 0.3s ease;
     }
-
-    .modal.fade.show .modal-dialog {
-      transform: scale(1) translateY(0);
-      opacity: 1;
+    .dark-mode .modal-content {
+      background: #1e1e1e;
+      color: #e9ecef;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    .modal-header {
+      background: linear-gradient(45deg, #2e7d32, #4caf50);
+      color: #ffffff;
+      border-top-left-radius: 1.5rem;
+      border-top-right-radius: 1.5rem;
+      padding: 1.5rem;
+      border-bottom: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .dark-mode .modal-header {
+      background: linear-gradient(45deg, #0c3a2d, #34c759);
+    }
+    .modal-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+      text-align: center;
+      margin: 0;
+    }
+    .modal-body {
+      padding: 2rem;
+      text-align: center;
+    }
+    .modal-result {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .modal-alert {
+      font-size: 1rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+    }
+    .modal-footer {
+      border-top: none;
+      padding: 0 2rem 2rem;
+      justify-content: center;
+    }
+    .btn-close-modal {
+      background: linear-gradient(45deg, #6c757d, #adb5bd);
+      color: #ffffff;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-close-modal:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .dark-mode .btn-close-modal {
+      background: linear-gradient(45deg, #4a635e, #ced4da);
+    }
+    .progress {
+      height: 0.5rem;
+      border-radius: 0.25rem;
+      margin-top: 1rem;
+      background: #e9ecef;
+    }
+    .dark-mode .progress {
+      background: #2c2c2c;
+    }
+    .progress-bar {
+      background: #4caf50;
+    }
+    .dark-mode .progress-bar {
+      background: #34c759;
+    }
+    .alert-danger .progress-bar {
+      background: #d32f2f;
+    }
+    .dark-mode .alert-danger .progress-bar {
+      background: #f44336;
+    }
+    @keyframes fadeInSlideUp {
+      0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .modal.fade .modal-dialog {
+      animation: fadeInSlideUp 0.4s ease-out forwards;
+    }
+    .modal.fade .modal-dialog.hide {
+      animation: fadeInSlideUp 0.4s ease-in reverse;
     }
   </style>
 </head>
@@ -151,14 +238,23 @@
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+<!-- Enhanced Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content p-4 text-center">
-      <h4 class="modal-title">Prediction Result</h4>
-      <p class="fs-5" id="modal-result"></p>
-      <div id="modal-alert" class="alert mt-3"></div>
-      <button type="button" class="btn btn-secondary mt-2" data-bs-dismiss="modal">Close</button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="resultModalLabel">Prediction Result</h4>
+      </div>
+      <div class="modal-body">
+        <p class="modal-result" id="modal-result"></p>
+        <div class="modal-alert alert" id="modal-alert"></div>
+        <div class="progress" id="confidence-bar" style="display: none;">
+          <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-close-modal" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -184,7 +280,6 @@
     symptomContainer.appendChild(wrapper);
   });
 
-  // Sun-moon glow transition
   const toggle = document.getElementById('modeToggle');
   const icon = document.getElementById('modeIcon');
   const body = document.body;
@@ -212,43 +307,59 @@
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
-
-    // Spinner on
     document.getElementById('loadingSpinner').style.display = 'block';
-
-    // Fill unchecked symptoms
     symptoms.forEach(symptom => {
       if (!formData.has(symptom)) formData.append(symptom, '0');
     });
+    try {
+      const response = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await response.json();
+      document.getElementById('loadingSpinner').style.display = 'none';
 
-    const response = await fetch('/predict', { method: 'POST', body: formData });
-    const data = await response.json();
+      const resultText = data.result || 'No result';
+      const alertText = data.alert || '';
+      const confidence = data.confidence || null; // Optional confidence score from backend
+      const modalResult = document.getElementById('modal-result');
+      const alertBox = document.getElementById('modal-alert');
+      const confidenceBar = document.getElementById('confidence-bar');
+      const progressBar = confidenceBar.querySelector('.progress-bar');
 
-    // Spinner off
-    document.getElementById('loadingSpinner').style.display = 'none';
+      modalResult.innerHTML = resultText.includes('positive') ?
+        `<i class="fas fa-bug text-danger me-2"></i> <strong>${resultText}</strong>` :
+        `<i class="fas fa-check-circle text-success me-2"></i> <strong>${resultText}</strong>`;
+      alertBox.className = `modal-alert alert mt-3 ${alertText.includes('detected') ? 'alert-danger' : 'alert-success'}`;
+      alertBox.innerHTML = alertText.includes('detected') ?
+        `🛑 ${alertText}` : `✅ ${alertText}`;
 
-    document.getElementById('modal-result').textContent = data.result || 'No result';
-    const alertBox = document.getElementById('modal-alert');
-    alertBox.className = 'alert mt-3 ' + (data.alert?.includes('detected') ? 'alert-danger' : 'alert-success');
-    alertBox.textContent = data.alert || '';
+      if (confidence && !isNaN(confidence) && confidence >= 0 && confidence <= 1) {
+        const percentage = (confidence * 100).toFixed(0);
+        progressBar.style.width = `${percentage}%`;
+        progressBar.setAttribute('aria-valuenow', percentage);
+        confidenceBar.style.display = 'block';
+      } else {
+        confidenceBar.style.display = 'none';
+      }
 
-    const modal = new bootstrap.Modal(document.getElementById('resultModal'));
-    modal.show();
-
-    // Play sound or vibrate
-    if (navigator.vibrate) navigator.vibrate(300);
-    const beep = new Audio('https://www.soundjay.com/button/sounds/beep-07.mp3');
-    beep.play();
-
-    if (data.predictions) {
-      const tbody = document.getElementById('predictions-body');
-      tbody.innerHTML = '';
-      data.predictions.forEach(p => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${p.name}</td><td>${p.result}</td><td>${p.alert}</td>`;
-        tbody.appendChild(row);
+      const modal = new bootstrap.Modal(document.getElementById('resultModal'), {
+        keyboard: true,
+        focus: true
       });
-      document.getElementById('predictions-card').style.display = 'block';
+      modal.show();
+      if (navigator.vibrate) navigator.vibrate(200);
+
+      if (data.predictions) {
+        const tbody = document.getElementById('predictions-body');
+        tbody.innerHTML = '';
+        data.predictions.forEach(p => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${p.name}</td><td>${p.result}</td><td>${p.alert}</td>`;
+          tbody.appendChild(row);
+        });
+        document.getElementById('predictions-card').style.display = 'block';
+      }
+    } catch (error) {
+      document.getElementById('loadingSpinner').style.display = 'none';
+      alert('Something went wrong: ' + error);
     }
   });
 
