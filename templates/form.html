@@ -61,7 +61,6 @@
       width: 3rem;
       height: 3rem;
     }
-    /* Advanced Modal Styles */
     .modal-content {
       border: none;
       border-radius: 1.5rem;
@@ -186,7 +185,7 @@
   <div class="text-center my-4">
     <i class="fas fa-virus fa-2x text-success"></i>
     <h1 class="fw-bold">Malaria Detection Portal</h1>
-    <p class="subtitle">AI-powered malaria diagnosis</p>
+    <p class="subtitle"><i>AI-powered malaria diagnosis</i></p>
   </div>
 
   <div class="card form-card">
@@ -231,14 +230,13 @@
     <h5>Last 5 Predictions</h5>
     <table class="table table-bordered mt-3">
       <thead>
-        <tr><th>Name</th><th>Result</th><th>Alert</th></tr>
+        <tr><th>S/N</th><th>Name</th><th>Result</th><th>Alert</th><th>Timestamp</th></tr>
       </thead>
       <tbody id="predictions-body"></tbody>
     </table>
   </div>
 </div>
 
-<!-- Enhanced Modal -->
 <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -318,7 +316,7 @@
 
       const resultText = data.result || 'No result';
       const alertText = data.alert || '';
-      const confidence = data.confidence || null; // Optional confidence score from backend
+      const confidence = data.confidence || null;
       const modalResult = document.getElementById('modal-result');
       const alertBox = document.getElementById('modal-alert');
       const confidenceBar = document.getElementById('confidence-bar');
@@ -350,9 +348,15 @@
       if (data.predictions) {
         const tbody = document.getElementById('predictions-body');
         tbody.innerHTML = '';
-        data.predictions.forEach(p => {
+        data.predictions.forEach((p, index) => {
           const row = document.createElement('tr');
-          row.innerHTML = `<td>${p.name}</td><td>${p.result}</td><td>${p.alert}</td>`;
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${p.name}</td>
+            <td>${p.result}</td>
+            <td>${p.alert}</td>
+            <td>${p.timestamp || 'N/A'}</td>
+          `;
           tbody.appendChild(row);
         });
         document.getElementById('predictions-card').style.display = 'block';
