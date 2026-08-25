@@ -3,255 +3,553 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Malaria Detection Portal</title>
+  <title>Malaria Prediction Portal</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: url('https://www.transparenttextures.com/patterns/white-wall.png') repeat, #ffffff;
-      transition: all 0.3s ease;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: url('https://www.transparenttextures.com/patterns/white-wall.png') repeat, #f5f5f5;
+      transition: background 0.4s, color 0.4s;
+      color: #1a1a1a;
+      min-height: 100vh;
     }
-    .dark-mode {
-      background: linear-gradient(135deg, #1c1c1c, #0c3a2d);
+    body.dark-mode {
+      background: linear-gradient(135deg, #1c1c1c 0%, #0c3a2d 100%);
       color: #e9ecef;
     }
+
+    /* HEADER */
+    .portal-header { text-align: center; padding: 40px 16px 20px; }
+    .portal-header .virus-icon { font-size: 2rem; color: #2e7d32; }
+    .dark-mode .portal-header .virus-icon { color: #4caf50; }
+    .portal-header h1 { font-size: 2rem; font-weight: 800; margin: 8px 0 4px; }
+    .portal-header .subtitle { color: #6c757d; font-style: italic; }
+    .dark-mode .portal-header .subtitle { color: #adb5bd; }
+
+    /* DARK TOGGLE */
+    .toggle-switch { position: fixed; top: 1rem; right: 1rem; z-index: 999; }
+    .theme-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      min-width: 48px; height: 42px; padding: 5px 10px 5px 6px;
+      border: 1px solid #d4e4d6; border-radius: 999px;
+      background: rgba(255,255,255,0.9); color: #38613c;
+      box-shadow: 0 5px 18px rgba(46,125,50,0.14);
+      transition: background 0.3s, border-color 0.3s, color 0.3s, transform 0.2s;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); border-color: #75a77a; }
+    .theme-toggle:focus-visible { outline: 3px solid rgba(76,175,80,0.35); outline-offset: 3px; }
+    .theme-toggle .toggle-track { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #e9f5ea; }
+    .theme-toggle .toggle-label { font-size: 0.72rem; font-weight: 700; }
+    .dark-mode .theme-toggle { background: rgba(30,42,35,0.96); border-color: #496d51; color: #d7f0da; }
+    .dark-mode .theme-toggle .toggle-track { background: #315638; }
+    .transition-icon { transition: transform 0.4s ease, opacity 0.4s ease, text-shadow 0.4s ease; }
+    .rotating { transform: rotate(180deg); opacity: 0.6; }
+    .glow-sun { color: gold; text-shadow: 0 0 8px gold; }
+    .glow-moon { color: #00c4ff; text-shadow: 0 0 8px #00c4ff; }
+
+    /* FORM CARD */
     .form-card {
-      background: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      padding: 2rem;
-      margin-top: 2rem;
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 28px 32px; margin-bottom: 24px;
     }
-    .dark-mode .form-card {
-      background: #1e1e1e;
-      color: #e9ecef;
+    .dark-mode .form-card { background: #1e1e1e; color: #e9ecef; }
+
+    .form-control, .form-select {
+      border-radius: 10px; border: 1.5px solid #ddd;
+      padding: 10px 14px; font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .toggle-switch {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
+    .form-control:focus, .form-select:focus {
+      border-color: #2e7d32; box-shadow: 0 0 0 3px rgba(46,125,50,0.12);
     }
-    .transition-icon {
-      transition: transform 0.4s ease, opacity 0.4s ease, text-shadow 0.4s ease;
+    .dark-mode .form-control, .dark-mode .form-select {
+      background: #2a2a2a; border-color: #444; color: #e9ecef;
     }
-    .rotating {
-      transform: rotate(180deg);
-      opacity: 0.6;
+    .form-control::placeholder { color: #8d9690; opacity: 1; font-style: italic; }
+    .dark-mode .form-control::placeholder { color: #c2ccc5; opacity: 1; font-style: italic; }
+    .dark-mode .form-control:focus, .dark-mode .form-select:focus {
+      border-color: #4caf50; box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
     }
-    .glow-sun {
-      color: gold;
-      text-shadow: 0 0 8px gold;
+    .form-label { font-weight: 600; font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+    .dark-mode .form-label { color: #aaa; }
+
+    /* SYMPTOM PILLS */
+    .symptoms-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .symptom-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 99px;
+      border: 1.5px solid #ddd; background: #f8f8f8;
+      font-size: 0.88rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+      user-select: none; color: #444;
     }
-    .glow-moon {
-      color: #00c4ff;
-      text-shadow: 0 0 8px #00c4ff;
+    .symptom-pill:hover { border-color: #2e7d32; color: #2e7d32; transform: translateY(-1px); }
+    .symptom-pill.active {
+      background: #2e7d32; border-color: #2e7d32; color: #fff;
+      box-shadow: 0 4px 12px rgba(46,125,50,0.3); transform: translateY(-1px);
     }
-    .subtitle {
-      color: #6c757d;
+    .dark-mode .symptom-pill { background: #2a2a2a; border-color: #444; color: #ccc; }
+    .dark-mode .symptom-pill:hover { border-color: #4caf50; color: #4caf50; }
+    .dark-mode .symptom-pill.active { background: #388e3c; border-color: #4caf50; color: #fff; }
+
+    /* BUTTONS */
+    .btn-predict {
+      background: #2e7d32; color: #fff; border: none;
+      padding: 12px 36px; border-radius: 10px; font-size: 1rem;
+      font-weight: 600; cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(46,125,50,0.25);
     }
-    .dark-mode .subtitle {
-      color: #ced4da;
+    .btn-predict:hover { background: #1b5e20; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(46,125,50,0.35); }
+    .btn-reset {
+      background: #c62828; color: #fff; border: none;
+      padding: 12px 28px; border-radius: 10px; font-size: 1rem;
+      font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.15s;
     }
-    #loadingSpinner {
-      display: none;
-      margin-top: 20px;
+    .btn-reset:hover { background: #b71c1c; transform: translateY(-1px); }
+    .btn-print-result { background: #1769aa; color: #fff; border: none; padding: 12px 28px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.15s; box-shadow: 0 4px 14px rgba(23,105,170,0.25); }
+    .btn-print-result:hover:not(:disabled) { background: #0d4774; transform: translateY(-1px); }
+    .btn-print-result:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+    /* LOADING */
+    #loadingSpinner { display: none; margin-top: 20px; text-align: center; }
+
+    /* HISTORY CARD */
+    .history-card {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 24px 28px; margin-bottom: 40px;
     }
-    .spinner-border {
-      width: 3rem;
-      height: 3rem;
+    .dark-mode .history-card { background: #1e1e1e; }
+
+    .history-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
     }
+    .history-title { font-size: 1.1rem; font-weight: 700; }
+    .toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .search-wrap { position: relative; }
+    .search-wrap input {
+      padding: 8px 14px 8px 34px; border-radius: 10px;
+      border: 1.5px solid #ddd; font-size: 0.85rem;
+      width: 190px; transition: all 0.2s; outline: none;
+    }
+    .search-wrap input:focus { border-color: #2e7d32; width: 230px; }
+    .dark-mode .search-wrap input { background: #2a2a2a; border-color: #444; color: #e9ecef; }
+    .search-wrap .search-icon {
+      position: absolute; left: 11px; top: 50%;
+      transform: translateY(-50%); color: #aaa; font-size: 0.78rem;
+    }
+
+    .toolbar-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 13px; border-radius: 10px; border: 1.5px solid #ddd;
+      background: #fff; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; color: #555; transition: all 0.2s;
+    }
+    .toolbar-btn:hover { border-color: #2e7d32; color: #2e7d32; }
+    .toolbar-btn.danger:hover { border-color: #c62828; color: #c62828; }
+    .dark-mode .toolbar-btn { background: #2a2a2a; border-color: #444; color: #ccc; }
+    .dark-mode .toolbar-btn:hover { border-color: #4caf50; color: #4caf50; }
+
+    .dropdown-wrap { position: relative; }
+    .dropdown-panel {
+      display: none; position: absolute; right: 0; z-index: 300;
+      background: #fff; border: 1.5px solid #e0e0e0;
+      border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      padding: 16px; min-width: 210px; margin-top: 6px;
+    }
+    .dropdown-panel.open { display: block; }
+    .dark-mode .dropdown-panel { background: #2a2a2a; border-color: #444; }
+    .dropdown-panel label {
+      font-size: 0.78rem; font-weight: 700; color: #888;
+      margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .dark-mode .dropdown-panel label { color: #aaa; }
+    .dropdown-panel select, .dropdown-panel input[type="number"] {
+      width: 100%; padding: 7px 10px; border-radius: 8px;
+      border: 1.5px solid #ddd; font-size: 0.85rem; margin-bottom: 10px; outline: none;
+    }
+    .dark-mode .dropdown-panel select,
+    .dark-mode .dropdown-panel input[type="number"] {
+      background: #1e1e1e; border-color: #555; color: #e9ecef;
+    }
+    .apply-btn {
+      width: 100%; padding: 8px; background: #2e7d32; color: #fff;
+      border: none; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer;
+    }
+    .apply-btn:hover { background: #1b5e20; }
+
+    /* HISTORY TABLE */
+    .history-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .history-table th {
+      padding: 10px 12px; text-align: left; font-size: 0.75rem;
+      font-weight: 700; color: #999; border-bottom: 2px solid #f0f0f0;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .dark-mode .history-table th { color: #666; border-color: #333; }
+    .history-table td { padding: 12px 12px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+    .dark-mode .history-table td { border-color: #2a2a2a; }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table tr:hover td { background: #fafafa; }
+    .dark-mode .history-table tr:hover td { background: #252525; }
+
+    .badge-positive {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #fdecea; color: #c62828; padding: 4px 10px;
+      border-radius: 99px; font-size: 0.76rem; font-weight: 600;
+    }
+    .badge-negative {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #e8f5e9; color: #2e7d32; padding: 4px 10px;
+      border-radius: 99px; font-size: 0.76rem; font-weight: 600;
+    }
+    .dark-mode .badge-positive { background: #3b1010; color: #ef9a9a; }
+    .dark-mode .badge-negative { background: #0f2e0f; color: #a5d6a7; }
+
+    .btn-print {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 8px; border: 1.5px solid #ddd;
+      background: #fff; font-size: 0.76rem; font-weight: 600;
+      cursor: pointer; color: #555; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-print:hover { border-color: #2e7d32; color: #2e7d32; }
+    .dark-mode .btn-print { background: #2a2a2a; border-color: #444; color: #ccc; }
+    .btn-delete {
+      display: inline-grid; place-items: center; width: 32px; height: 32px;
+      border: 1px solid #f2caca; border-radius: 8px; background: #fff7f7;
+      color: #c62828; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-delete:hover { background: #c62828; color: #fff; transform: translateY(-1px); }
+    .dark-mode .btn-delete { background: #321b1b; border-color: #713b3b; color: #ef9a9a; }
+    .dark-mode .btn-delete:hover { background: #c62828; color: #fff; }
+
+    .see-more-btn {
+      display: block; width: 100%; margin-top: 16px; padding: 10px;
+      border-radius: 10px; border: 1.5px dashed #ddd; background: transparent;
+      font-size: 0.85rem; font-weight: 600; color: #777; cursor: pointer; transition: all 0.2s;
+    }
+    .see-more-btn:hover { border-color: #2e7d32; color: #2e7d32; }
+    .dark-mode .see-more-btn { border-color: #444; color: #aaa; }
+
+    .no-results { text-align: center; padding: 32px; color: #bbb; font-size: 0.9rem; }
+
+    /* RESULT MODAL */
     .modal-content {
-      border: none;
-      border-radius: 1.5rem;
-      background: #ffffff;
-      color: #1b3c35;
-      box-shadow: 0 8px 32px rgba(0, 48, 46, 0.2);
-      overflow: hidden;
-      transition: all 0.3s ease;
+      border: none; border-radius: 20px; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modalPop 0.4s cubic-bezier(0.16,1,0.3,1) both;
     }
-    .dark-mode .modal-content {
-      background: #1e1e1e;
-      color: #e9ecef;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    .dark-mode .modal-content { background: #1e1e1e; color: #e9ecef; }
+
+    @keyframes modalPop {
+      from { opacity:0; transform: scale(0.92) translateY(20px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
     }
+
     .modal-header {
-      background: linear-gradient(45deg, #2e7d32, #4caf50);
-      color: #ffffff;
-      border-top-left-radius: 1.5rem;
-      border-top-right-radius: 1.5rem;
-      padding: 1.5rem;
-      border-bottom: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 28px 24px 20px; flex-direction: column;
+      gap: 10px; border-bottom: none;
     }
-    .dark-mode .modal-header {
-      background: linear-gradient(45deg, #0c3a2d, #34c759);
+    .modal-header.malaria-positive { background: linear-gradient(135deg, #b71c1c, #e53935); }
+    .modal-header.malaria-negative { background: linear-gradient(135deg, #1b5e20, #43a047); }
+
+    .modal-icon {
+      font-size: 2.4rem;
+      animation: spinIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      animation-delay: 0.1s;
     }
-    .modal-title {
-      font-weight: 700;
-      font-size: 1.5rem;
-      text-align: center;
-      margin: 0;
+    @keyframes spinIn {
+      from { opacity:0; transform: rotate(-180deg) scale(0.5); }
+      to   { opacity:1; transform: rotate(0) scale(1); }
     }
-    .modal-body {
-      padding: 2rem;
-      text-align: center;
+    .modal-title { font-size: 1.15rem; font-weight: 700; color: white; }
+    .modal-body { padding: 24px 28px 12px; text-align: center; }
+    .modal-body::before {
+      content: 'SCREENING RESULT'; display: block; margin-bottom: 10px;
+      color: #8a968b; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em;
     }
-    .modal-result {
-      font-size: 1.25rem;
-      font-weight: 500;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .modal-alert {
-      font-size: 1rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      margin-bottom: 1.5rem;
+    .dark-mode .modal-body::before { color: #91aa96; }
+
+    .patient-row {
       display: inline-block;
+      max-width: 100%; margin: 0 auto 18px; padding: 8px 14px;
+      border: 1px solid #d7ead9; border-radius: 999px;
+      background: #f4fbf4; color: #38613c;
+      font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em;
+      text-transform: none; overflow-wrap: anywhere;
     }
+    .dark-mode .patient-row { border-color: #315936; background: #172719; color: #c8e6c9; }
+
+    .result-badge {
+      font-size: 1.35rem; font-weight: 800; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      animation: fadeSlide 0.4s ease both; animation-delay: 0.2s;
+    }
+    @keyframes fadeSlide {
+      from { opacity:0; transform: translateY(10px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .result-badge.positive { color: #c62828; }
+    .result-badge.negative { color: #2e7d32; }
+    .dark-mode .result-badge.positive { color: #ef5350; }
+    .dark-mode .result-badge.negative { color: #66bb6a; }
+
+    .result-message {
+      font-size: 0.9rem; padding: 12px 16px; border-radius: 12px;
+      margin-bottom: 14px; font-weight: 500; line-height: 1.6;
+      animation: fadeSlide 0.4s ease both; animation-delay: 0.28s; text-align: left;
+    }
+    .result-message.positive { background: #fdecea; color: #b71c1c; border: 1px solid #ffcdd2; }
+    .result-message.negative { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+    .dark-mode .result-message.positive { background: #3b1010; color: #ef9a9a; border-color: #5c2020; }
+    .dark-mode .result-message.negative { background: #0f2e0f; color: #a5d6a7; border-color: #1b5e20; }
+
+    .btn-nearby {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 8px; padding: 9px 18px; border-radius: 10px;
+      font-size: 0.83rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; text-decoration: none;
+      border: 1.5px solid #c8e6c9; background: #e8f5e9; color: #2e7d32;
+    }
+    .btn-nearby:hover { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+    .btn-nearby.danger { border-color: #ffcdd2; background: #fdecea; color: #c62828; }
+    .btn-nearby.danger:hover { background: #c62828; color: #fff; border-color: #c62828; }
+    .dark-mode .btn-nearby { background: #0f2e0f; border-color: #1b5e20; color: #a5d6a7; }
+    .dark-mode .btn-nearby.danger { background: #3b1010; border-color: #5c2020; color: #ef9a9a; }
+
+    .confidence-section {
+      margin-bottom: 16px;
+      animation: fadeSlide 0.4s ease both; animation-delay: 0.35s;
+    }
+    .confidence-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.78rem; font-weight: 600; color: #777; margin-bottom: 6px;
+    }
+    .dark-mode .confidence-label { color: #aaa; }
+    .conf-track { height: 8px; background: #e0e0e0; border-radius: 99px; overflow: hidden; }
+    .dark-mode .conf-track { background: #333; }
+    .conf-fill {
+      height: 100%; border-radius: 99px; width: 0%;
+      transition: width 1s cubic-bezier(0.16,1,0.3,1);
+    }
+    .conf-fill.positive { background: linear-gradient(90deg, #e53935, #ef9a9a); }
+    .conf-fill.negative { background: linear-gradient(90deg, #2e7d32, #81c784); }
+
+    .disclaimer { font-size: 0.72rem; color: #bbb; margin: 4px 0 0; line-height: 1.5; }
+    .dark-mode .disclaimer { color: #555; }
+
     .modal-footer {
-      border-top: none;
-      padding: 0 2rem 2rem;
-      justify-content: center;
+      border-top: 1px solid #f0f0f0; padding: 14px 28px 20px; justify-content: center;
     }
+    .dark-mode .modal-footer { border-color: #2a2a2a; }
     .btn-close-modal {
-      background: linear-gradient(45deg, #6c757d, #adb5bd);
-      color: #ffffff;
-      border: none;
-      border-radius: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding: 10px 32px; border-radius: 10px; border: none;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      background: #f0f0f0; color: #333; transition: all 0.2s;
     }
-    .btn-close-modal:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    .dark-mode .btn-close-modal {
-      background: linear-gradient(45deg, #4a635e, #ced4da);
-    }
-    .progress {
-      height: 0.5rem;
-      border-radius: 0.25rem;
-      margin-top: 1rem;
-      background: #e9ecef;
-    }
-    .dark-mode .progress {
-      background: #2c2c2c;
-    }
-    .progress-bar {
-      background: #4caf50;
-    }
-    .dark-mode .progress-bar {
-      background: #34c759;
-    }
-    .alert-danger .progress-bar {
-      background: #d32f2f;
-    }
-    .dark-mode .alert-danger .progress-bar {
-      background: #f44336;
-    }
-    @keyframes fadeInSlideUp {
-      0% {
-        opacity: 0;
-        transform: translateY(50px) scale(0.95);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-    .modal.fade .modal-dialog {
-      animation: fadeInSlideUp 0.4s ease-out forwards;
-    }
-    .modal.fade .modal-dialog.hide {
-      animation: fadeInSlideUp 0.4s ease-in reverse;
-    }
+    .btn-close-modal:hover { background: #e0e0e0; transform: translateY(-1px); }
+    .dark-mode .btn-close-modal { background: #2a2a2a; color: #eee; }
+    .dark-mode .btn-close-modal:hover { background: #333; }
   </style>
 </head>
 <body>
+
+<!-- Dark mode toggle -->
 <div class="toggle-switch">
-  <button id="modeToggle" class="btn btn-outline-secondary rounded-circle p-2" title="Toggle Dark Mode">
-    <i id="modeIcon" class="fas fa-moon fa-lg transition-icon glow-moon"></i>
+  <button id="modeToggle" class="theme-toggle" type="button" title="Switch to dark mode" aria-label="Switch to dark mode" aria-pressed="false">
+    <span class="toggle-track"><i id="modeIcon" class="fas fa-moon transition-icon glow-moon" aria-hidden="true"></i></span>
+    <span id="modeLabel" class="toggle-label">Light</span>
   </button>
 </div>
 
-<div class="container">
-  <div class="text-center my-4">
-    <i class="fas fa-virus fa-2x text-success"></i>
-    <h1 class="fw-bold">Malaria Detection Portal</h1>
-    <p class="subtitle"><i>AI-powered malaria diagnosis</i></p>
+<div class="container" style="max-width:860px; padding-top:10px; padding-bottom:40px;">
+
+  <!-- Header -->
+  <div class="portal-header">
+    <div class="virus-icon"><i class="fas fa-virus"></i></div>
+    <h1>Malaria Prediction Portal</h1>
+    <p class="subtitle">AI-powered malaria diagnosis</p>
   </div>
 
-  <div class="card form-card">
+  <!-- Form Card -->
+  <div class="form-card">
     <form id="predictionForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3">
         <div class="col-md-6">
-          <label for="name" class="form-label">Name</label>
-          <input type="text" class="form-control" name="name" required>
+          <label class="form-label">Patient Name</label>
+          <input type="text" class="form-control" name="name" placeholder="e.g. Gwatana Benjamin" autocomplete="name" required>
         </div>
         <div class="col-md-6">
-          <label for="age" class="form-label">Age</label>
-          <input type="number" class="form-control" name="age" min="0" required>
+          <label class="form-label">Age</label>
+          <input type="number" inputmode="numeric" class="form-control" name="age" id="ageInput" min="0" max="120" placeholder="0 – 120" required>
+          <small id="ageError" class="text-danger d-none">Age must be between 0 and 120.</small>
         </div>
         <div class="col-md-6">
-          <label for="gender" class="form-label">Gender</label>
+          <label class="form-label">Gender</label>
           <select class="form-select" name="gender" required>
             <option value="male">Male</option>
             <option value="female">Female</option>
           </select>
         </div>
         <div class="col-md-6">
-          <label for="temperature" class="form-label">Body Temperature (°C)</label>
-          <input type="number" step="0.1" class="form-control" name="temperature" required>
+          <label class="form-label">Body Temperature</label>
+          <div class="input-group">
+            <input type="number" inputmode="decimal" step="0.1" class="form-control" name="temperature"
+              id="temperatureInput" min="25" max="43" placeholder="e.g. 38.5" required>
+            <select class="form-select temperature-unit" name="temp_unit" id="tempUnit">
+              <option value="C">°C</option>
+              <option value="F">°F</option>
+            </select>
+          </div>
+          <small id="tempHint" class="text-muted" style="font-size:0.78rem;">Allowed: 25°C – 43°C</small>
+          <small id="tempError" class="text-danger d-none">Temperature out of range.</small>
         </div>
       </div>
-      <hr>
-      <label class="form-label">Select symptoms</label>
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2" id="symptoms"></div>
-      <div class="text-center">
-        <button type="submit" class="btn btn-success px-4">Predict</button>
-        <button type="button" class="btn btn-danger px-4" onclick="resetPredictions()">Reset</button>
+
+      <hr style="margin:24px 0 16px;">
+      <label class="form-label" style="font-size:0.9rem; margin-bottom:12px; display:block;">
+        Select Symptoms
+        <span style="font-weight:400; color:#aaa; font-size:0.78rem; margin-left:6px;">tap to toggle</span>
+      </label>
+      <div class="symptoms-grid" id="symptomsGrid"></div>
+
+      <div class="text-center mt-4 d-flex justify-content-center gap-3">
+        <button type="submit" class="btn-predict">
+          <i class="fas fa-search-plus"></i> Predict
+        </button>
+        <button type="button" class="btn-reset" onclick="resetForm()">
+          <i class="fas fa-redo"></i> Reset
+        </button>
       </div>
 
-      <div id="loadingSpinner" class="text-center">
-        <div class="spinner-border text-primary" role="status"></div>
-        <div class="mt-2">Processing...</div>
+      <div id="loadingSpinner">
+        <div class="spinner-border text-success" role="status"></div>
+        <div class="mt-2" style="color:#2e7d32; font-weight:600;">Analysing symptoms…</div>
       </div>
     </form>
   </div>
 
-  <div class="card form-card mt-5" id="predictions-card" style="display:none;">
-    <h5>Last 5 Predictions</h5>
-    <table class="table table-bordered mt-3">
-      <thead>
-        <tr><th>S/N</th><th>Name</th><th>Result</th><th>Alert</th><th>Timestamp</th></tr>
-      </thead>
-      <tbody id="predictions-body"></tbody>
-    </table>
+  <!-- Prediction History -->
+  <div class="history-card" id="historyCard" style="display:none;">
+    <div class="history-toolbar">
+      <div class="history-title">
+        <i class="fas fa-history" style="color:#2e7d32; margin-right:6px;"></i>
+        Prediction History
+      </div>
+      <div class="toolbar-actions">
+        <button class="toolbar-btn danger" type="button" onclick="clearHistory()" title="Delete all prediction history">
+          <i class="fas fa-trash-alt"></i> Clear history
+        </button>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Search name or date…" oninput="renderHistory()">
+        </div>
+
+        <!-- Sort -->
+        <div class="dropdown-wrap">
+          <button class="toolbar-btn" onclick="toggleDropdown('sortPanel')">
+            <i class="fas fa-sort"></i> Sort
+          </button>
+          <div class="dropdown-panel" id="sortPanel">
+            <label>Sort by</label>
+            <select id="sortField">
+              <option value="date_desc">Date — Newest first</option>
+              <option value="date_asc">Date — Oldest first</option>
+              <option value="name_asc">Patient Name A → Z</option>
+              <option value="name_desc">Patient Name Z → A</option>
+            </select>
+            <button class="apply-btn" onclick="renderHistory(); closeDropdown('sortPanel')">Apply</button>
+          </div>
+        </div>
+
+        <!-- Filter -->
+        <div class="dropdown-wrap">
+          <button class="toolbar-btn" onclick="toggleDropdown('filterPanel')">
+            <i class="fas fa-filter"></i> Filter
+          </button>
+          <div class="dropdown-panel" id="filterPanel">
+            <label>Result</label>
+            <select id="filterResult">
+              <option value="all">All results</option>
+              <option value="positive">Malaria Predicted</option>
+              <option value="negative">No Malaria Predicted</option>
+            </select>
+            <label>Last N days</label>
+            <input type="number" id="filterDays" min="1" placeholder="e.g. 7 for last week">
+            <button class="apply-btn" onclick="renderHistory(); closeDropdown('filterPanel')">Apply</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="historyTableWrap" style="overflow-x:auto;">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Patient</th>
+            <th>Result</th>
+            <th>Confidence</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+      <div id="noResults" class="no-results" style="display:none;">
+        <i class="fas fa-search" style="font-size:1.4rem; margin-bottom:8px; display:block; opacity:0.4;"></i>
+        No predictions match your search or filter.
+      </div>
+    </div>
+
+    <button class="see-more-btn" id="seeMoreBtn" onclick="loadMoreHistory()" style="display:none;">
+      <i class="fas fa-chevron-down"></i> Show more predictions
+    </button>
   </div>
+
 </div>
 
-<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
     <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="resultModalLabel">Prediction Result</h4>
+      <div class="modal-header" id="modalHeader">
+        <div class="modal-icon" id="modalIcon">🦟</div>
+        <h4 class="modal-title">Prediction Result</h4>
       </div>
       <div class="modal-body">
-        <p class="modal-result" id="modal-result"></p>
-        <div class="modal-alert alert" id="modal-alert"></div>
-        <div class="progress" id="confidence-bar" style="display: none;">
-          <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="patient-row" id="patientRow"></div>
+        <div class="result-badge" id="resultBadge"></div>
+        <div class="result-message" id="resultMessage"></div>
+        <div id="nearbyWrap" style="text-align:center; margin-bottom:14px;"></div>
+        <div class="confidence-section" id="confidenceSection" style="display:none;">
+          <div class="confidence-label">
+            <span>Model Confidence</span>
+            <span id="confidencePct">—</span>
+          </div>
+          <div class="conf-track">
+            <div class="conf-fill" id="confFill"></div>
+          </div>
         </div>
+        <p class="disclaimer">⚕️ This is an AI-assisted screening tool. Always consult a qualified medical professional for diagnosis.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-close-modal" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn-print-result" onclick="printCurrentResult()">
+          <i class="fas fa-print"></i> Print Result
+        </button>
+        <button type="button" class="btn-close-modal" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -259,127 +557,471 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const symptoms = [
-    'fever','headache','vomiting','diarrhoea','anaemia','cough','convulsion',
-    'dizziness','loss_of_appetite','joint_pain','chills','sweating','rapid_diagnostic_test_positive'
-  ];
+// ── SYMPTOMS ──
+const SYMPTOMS = [
+  { key:'fever',                          label:'Fever',                      icon:'🌡️' },
+  { key:'headache',                       label:'Headache',                   icon:'🤕' },
+  { key:'vomiting',                       label:'Vomiting',                   icon:'🤢' },
+  { key:'diarrhoea',                      label:'Diarrhoea',                  icon:'🚽' },
+  { key:'anaemia',                        label:'Anaemia',                    icon:'🩸' },
+  { key:'cough',                          label:'Cough',                      icon:'😮‍💨' },
+  { key:'convulsion',                     label:'Convulsion',                 icon:'⚡' },
+  { key:'dizziness',                      label:'Dizziness',                  icon:'😵' },
+  { key:'loss_of_appetite',               label:'Loss of Appetite',           icon:'🍽️' },
+  { key:'joint_pain',                     label:'Joint Pain',                 icon:'🦴' },
+  { key:'chills',                         label:'Chills',                     icon:'🥶' },
+  { key:'sweating',                       label:'Sweating',                   icon:'💧' },
+  { key:'rapid_diagnostic_test_positive', label:'Rapid Diagnostic Test +',   icon:'🧪' },
+];
 
-  const symptomContainer = document.getElementById('symptoms');
-  symptoms.forEach(symptom => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'col';
-    const checkbox = document.createElement('div');
-    checkbox.className = 'form-check';
-    checkbox.innerHTML = `
-      <input class="form-check-input" type="checkbox" name="${symptom}" value="1">
-      <label class="form-check-label text-capitalize">${symptom.replace(/_/g, ' ')}</label>
-    `;
-    wrapper.appendChild(checkbox);
-    symptomContainer.appendChild(wrapper);
-  });
+const selectedSymptoms = new Set();
+const grid = document.getElementById('symptomsGrid');
+const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
-  const toggle = document.getElementById('modeToggle');
-  const icon = document.getElementById('modeIcon');
-  const body = document.body;
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[character]));
+}
 
-  toggle.addEventListener('click', () => {
-    const isDark = body.classList.toggle('dark-mode');
-    icon.classList.add('rotating');
-    setTimeout(() => {
-      icon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
-      icon.classList.toggle('glow-sun', isDark);
-      icon.classList.toggle('glow-moon', !isDark);
-      icon.classList.remove('rotating');
-    }, 300);
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  });
-
-  if (localStorage.getItem('theme') === 'dark') {
-    body.classList.add('dark-mode');
-    icon.classList.replace('fa-moon', 'fa-sun');
-    icon.classList.add('glow-sun');
-    icon.classList.remove('glow-moon');
-  }
-
-  document.getElementById('predictionForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    document.getElementById('loadingSpinner').style.display = 'block';
-    symptoms.forEach(symptom => {
-      if (!formData.has(symptom)) formData.append(symptom, '0');
-    });
-    // Capture device local time
-    const localTimestamp = new Date().toLocaleString('en-GB', { 
-      timeZone: 'Africa/Lagos', // WAT time zone
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit', 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
-    }).replace(/,/, '');
-    try {
-      const response = await fetch('/predict', { method: 'POST', body: formData });
-      const data = await response.json();
-      document.getElementById('loadingSpinner').style.display = 'none';
-
-      const resultText = data.result || 'No result';
-      const alertText = data.alert || '';
-      const confidence = data.confidence || null;
-      const modalResult = document.getElementById('modal-result');
-      const alertBox = document.getElementById('modal-alert');
-      const confidenceBar = document.getElementById('confidence-bar');
-      const progressBar = confidenceBar.querySelector('.progress-bar');
-
-      modalResult.innerHTML = resultText.includes('positive') ?
-        `<i class="fas fa-bug text-danger me-2"></i> <strong>${resultText}</strong>` :
-        `<i class="fas fa-check-circle text-success me-2"></i> <strong>${resultText}</strong>`;
-      alertBox.className = `modal-alert alert mt-3 ${alertText.includes('detected') ? 'alert-danger' : 'alert-success'}`;
-      alertBox.innerHTML = alertText.includes('detected') ?
-        `🛑 ${alertText}` : `✅ ${alertText}`;
-
-      if (confidence && !isNaN(confidence) && confidence >= 0 && confidence <= 1) {
-        const percentage = (confidence * 100).toFixed(0);
-        progressBar.style.width = `${percentage}%`;
-        progressBar.setAttribute('aria-valuenow', percentage);
-        confidenceBar.style.display = 'block';
-      } else {
-        confidenceBar.style.display = 'none';
-      }
-
-      const modal = new bootstrap.Modal(document.getElementById('resultModal'), {
-        keyboard: true,
-        focus: true
-      });
-      modal.show();
-      if (navigator.vibrate) navigator.vibrate(200);
-
-      if (data.predictions) {
-        const tbody = document.getElementById('predictions-body');
-        tbody.innerHTML = '';
-        data.predictions.forEach((p, index) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${p.name}</td>
-            <td>${p.result}</td>
-            <td>${p.alert}</td>
-            <td>${localTimestamp}</td>
-          `;
-          tbody.appendChild(row);
-        });
-        document.getElementById('predictions-card').style.display = 'block';
-      }
-    } catch (error) {
-      document.getElementById('loadingSpinner').style.display = 'none';
-      alert('Something went wrong: ' + error);
+SYMPTOMS.forEach(s => {
+  const pill = document.createElement('button');
+  pill.type = 'button';
+  pill.className = 'symptom-pill';
+  pill.dataset.key = s.key;
+  pill.innerHTML = `<span>${s.icon}</span>${s.label}`;
+  pill.addEventListener('click', () => {
+    if (selectedSymptoms.has(s.key)) {
+      selectedSymptoms.delete(s.key);
+      pill.classList.remove('active');
+    } else {
+      selectedSymptoms.add(s.key);
+      pill.classList.add('active');
     }
   });
+  grid.appendChild(pill);
+});
 
-  function resetPredictions() {
-    fetch('/reset').then(() => location.reload());
+// ── DARK MODE ──
+const toggle = document.getElementById('modeToggle');
+const icon   = document.getElementById('modeIcon');
+const modeLabel = document.getElementById('modeLabel');
+const body   = document.body;
+
+function setThemeState(isDark) {
+  body.classList.toggle('dark-mode', isDark);
+  icon.classList.toggle('fa-sun', isDark);
+  icon.classList.toggle('fa-moon', !isDark);
+  icon.classList.toggle('glow-sun', isDark);
+  icon.classList.toggle('glow-moon', !isDark);
+  modeLabel.textContent = isDark ? 'Dark' : 'Light';
+  toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+  toggle.setAttribute('aria-label', toggle.title);
+  toggle.setAttribute('aria-pressed', String(isDark));
+}
+
+if (localStorage.getItem('theme') === 'dark') {
+  body.classList.add('dark-mode');
+}
+setThemeState(body.classList.contains('dark-mode'));
+
+toggle.addEventListener('click', () => {
+  const isDark = !body.classList.contains('dark-mode');
+  icon.classList.add('rotating');
+  setTimeout(() => {
+    setThemeState(isDark);
+    icon.classList.remove('rotating');
+  }, 300);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
+
+// ── VALIDATION ──
+const ageInput  = document.getElementById('ageInput');
+const ageError  = document.getElementById('ageError');
+const tempInput = document.getElementById('temperatureInput');
+const tempUnit  = document.getElementById('tempUnit');
+const tempError = document.getElementById('tempError');
+const tempHint  = document.getElementById('tempHint');
+
+ageInput.addEventListener('input', () => {
+  const v = parseInt(ageInput.value);
+  const bad = isNaN(v) || v < 0 || v > 120;
+  ageError.classList.toggle('d-none', !bad);
+  ageInput.classList.toggle('is-invalid', bad);
+});
+
+tempUnit.addEventListener('change', () => {
+  tempInput.value = '';
+  tempError.classList.add('d-none');
+  tempInput.classList.remove('is-invalid');
+  if (tempUnit.value === 'C') {
+    tempInput.min = 25; tempInput.max = 43;
+    tempHint.textContent = 'Allowed: 25°C – 43°C';
+  } else {
+    tempInput.min = 77; tempInput.max = 109.4;
+    tempHint.textContent = 'Allowed: 77°F – 109.4°F';
   }
+});
+
+tempInput.addEventListener('input', () => {
+  const t = parseFloat(tempInput.value);
+  const valid = tempUnit.value === 'C' ? (t >= 25 && t <= 43) : (t >= 77 && t <= 109.4);
+  const bad = isNaN(t) || !valid;
+  tempError.classList.toggle('d-none', !bad);
+  tempInput.classList.toggle('is-invalid', bad);
+  tempError.textContent = tempUnit.value === 'C'
+    ? 'Temperature must be between 25°C and 43°C'
+    : 'Temperature must be between 77°F and 109.4°F';
+});
+
+// ── HISTORY STATE ──
+let allHistory = [];
+let visibleCount = 5;
+let currentResult = null;
+
+const nameInput = document.querySelector('[name="name"]');
+nameInput.addEventListener('input', () => {
+  nameInput.value = nameInput.value.replace(/(^|[\s'-])([a-z])/g, (match, prefix, letter) => prefix + letter.toUpperCase());
+});
+
+// ── SUBMIT ──
+document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const patientName = form.querySelector('[name="name"]').value || 'Unknown';
+  const formData = new FormData(form);
+
+  SYMPTOMS.forEach(s => {
+    formData.set(s.key, selectedSymptoms.has(s.key) ? '1' : '0');
+  });
+
+  document.getElementById('loadingSpinner').style.display = 'block';
+
+  try {
+    const response = await fetch('/predict', { method: 'POST', body: formData });
+    const data = await response.json();
+    document.getElementById('loadingSpinner').style.display = 'none';
+
+    if (data.error) { alert('Error: ' + data.error); return; }
+
+    showResult(data, patientName);
+
+    if (data.predictions) {
+      allHistory = data.predictions;
+      visibleCount = 5;
+      renderHistory();
+      document.getElementById('historyCard').style.display = 'block';
+    }
+
+    // Auto-reset form after prediction
+    resetForm();
+
+  } catch (err) {
+    document.getElementById('loadingSpinner').style.display = 'none';
+    alert('Something went wrong: ' + err);
+  }
+});
+
+// ── SHOW RESULT ──
+function showResult(data, patientName) {
+  currentResult = { ...data, name: patientName, timestamp: new Date().toISOString() };
+  const isPositive = data.result && data.result.includes('Malaria Detected') && !data.result.includes('No');
+
+  document.getElementById('modalHeader').className =
+    'modal-header ' + (isPositive ? 'malaria-positive' : 'malaria-negative');
+  document.getElementById('modalIcon').textContent = isPositive ? '🦟' : '✅';
+  document.getElementById('patientRow').textContent = `Patient: ${patientName}`;
+
+  const badge = document.getElementById('resultBadge');
+  badge.className = 'result-badge ' + (isPositive ? 'positive' : 'negative');
+  badge.innerHTML = isPositive
+    ? `<span>⚠️</span><span>Malaria Predicted</span>`
+    : `<span>✅</span><span>No Malaria Predicted</span>`;
+
+  const msg = document.getElementById('resultMessage');
+  msg.className = 'result-message ' + (isPositive ? 'positive' : 'negative');
+  msg.innerHTML = isPositive
+    ? `<strong>🛑 Malaria indicators found.</strong> Please seek medical attention immediately. Visit the nearest Healthcare Facility for validation.`
+    : `<strong>✅ No malaria indicators found.</strong> Stay healthy and maintain good hygiene. Visit the nearest Healthcare Facility for validation.`;
+
+  // Nearby button (uses GPS if available)
+  const nearbyWrap = document.getElementById('nearbyWrap');
+  nearbyWrap.innerHTML = '';
+  const buildNearbyBtn = (lat, lng) => {
+    const query = isPositive ? 'hospital+near+me' : 'pharmacy+near+me';
+    const url = lat
+      ? `https://www.google.com/maps/search/${query}/@${lat},${lng},14z`
+      : (isPositive ? 'https://www.google.com/maps/search/hospital+near+me'
+                    : 'https://www.google.com/maps/search/pharmacy+near+me');
+    const btn = document.createElement('a');
+    btn.href = url; btn.target = '_blank';
+    btn.className = 'btn-nearby' + (isPositive ? ' danger' : '');
+    btn.innerHTML = isPositive
+      ? `<i class="fas fa-hospital"></i> Find Nearest Hospital on Google Maps`
+      : `<i class="fas fa-clinic-medical"></i> Find Nearest Pharmacy on Google Maps`;
+    nearbyWrap.appendChild(btn);
+  };
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => buildNearbyBtn(pos.coords.latitude, pos.coords.longitude),
+      ()  => buildNearbyBtn(null, null)
+    );
+  } else { buildNearbyBtn(null, null); }
+
+  // Confidence bar
+  const conf = data.confidence;
+  if (conf !== null && conf !== undefined && !isNaN(conf)) {
+    const pct = (conf * 100).toFixed(1);
+    document.getElementById('confidencePct').textContent = pct + '%';
+    const fill = document.getElementById('confFill');
+    fill.className = 'conf-fill ' + (isPositive ? 'positive' : 'negative');
+    fill.style.width = '0%';
+    document.getElementById('confidenceSection').style.display = 'block';
+    setTimeout(() => { fill.style.width = pct + '%'; }, 150);
+  } else {
+    document.getElementById('confidenceSection').style.display = 'none';
+  }
+
+  new bootstrap.Modal(document.getElementById('resultModal'), { keyboard: true }).show();
+  if (navigator.vibrate) navigator.vibrate(200);
+}
+
+async function loadHistory() {
+  try {
+    const response = await fetch('/history');
+    if (!response.ok) return;
+    const data = await response.json();
+    allHistory = data.predictions || [];
+    visibleCount = 5;
+    renderHistory();
+    document.getElementById('historyCard').style.display = allHistory.length ? 'block' : 'none';
+  } catch (error) {
+    console.error('Unable to load prediction history:', error);
+  }
+}
+
+async function deletePrediction(predictionId) {
+  if (!confirm('Delete this prediction from your history?')) return;
+  const response = await fetch(`/history/${predictionId}`, { method: 'DELETE', headers: { 'X-CSRFToken': csrfToken } });
+  if (!response.ok) { alert('The prediction could not be deleted.'); return; }
+  allHistory = allHistory.filter(item => item.id !== predictionId);
+  renderHistory();
+  if (!allHistory.length) document.getElementById('historyCard').style.display = 'none';
+}
+
+async function clearHistory() {
+  if (!allHistory.length || !confirm('Delete all prediction history? This cannot be undone.')) return;
+  const response = await fetch('/history', { method: 'DELETE', headers: { 'X-CSRFToken': csrfToken } });
+  if (!response.ok) { alert('Prediction history could not be cleared.'); return; }
+  allHistory = [];
+  renderHistory();
+  document.getElementById('historyCard').style.display = 'none';
+}
+
+function togglePrintReport(input) {
+  if (input.checked && currentResult) printResult(JSON.stringify(currentResult));
+}
+
+// ── RENDER HISTORY ──
+function renderHistory() {
+  const search  = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const sort    = document.getElementById('sortField').value;
+  const fResult = document.getElementById('filterResult').value;
+  const fDays   = parseInt(document.getElementById('filterDays').value) || null;
+
+  let rows = [...allHistory];
+
+  if (fResult === 'positive') rows = rows.filter(r => r.result.includes('Malaria Detected') && !r.result.includes('No'));
+  if (fResult === 'negative') rows = rows.filter(r => r.result.includes('No'));
+
+  if (fDays) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - fDays);
+    rows = rows.filter(r => new Date(r.timestamp) >= cutoff);
+  }
+
+  if (search) {
+    rows = rows.filter(r =>
+      r.name.toLowerCase().includes(search) || r.timestamp.toLowerCase().includes(search)
+    );
+  }
+
+  rows.sort((a, b) => {
+    if (sort === 'date_desc') return new Date(b.timestamp) - new Date(a.timestamp);
+    if (sort === 'date_asc')  return new Date(a.timestamp) - new Date(b.timestamp);
+    if (sort === 'name_asc')  return a.name.localeCompare(b.name);
+    if (sort === 'name_desc') return b.name.localeCompare(a.name);
+    return 0;
+  });
+
+  const tbody   = document.getElementById('historyBody');
+  const noRes   = document.getElementById('noResults');
+  const seeMore = document.getElementById('seeMoreBtn');
+  tbody.innerHTML = '';
+
+  if (rows.length === 0) {
+    noRes.style.display = 'block'; seeMore.style.display = 'none'; return;
+  }
+  noRes.style.display = 'none';
+
+  rows.slice(0, visibleCount).forEach((p, i) => {
+    const isPos = p.result.includes('Malaria Detected') && !p.result.includes('No');
+    const dt    = new Date(p.timestamp);
+    const dateStr = isNaN(dt) ? p.timestamp : dt.toLocaleDateString('en-GB');
+    const timeStr = isNaN(dt) ? '' : dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const confPct = p.confidence ? (p.confidence * 100).toFixed(1) + '%' : '—';
+    const badge   = isPos
+      ? `<span class="badge-positive">⚠️ Malaria Predicted</span>`
+      : `<span class="badge-negative">✅ No Malaria Predicted</span>`;
+
+    const safeP = encodeURIComponent(JSON.stringify(p)).replace(/'/g, '%27');
+    const safeName = escapeHtml(p.name);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#aaa;font-size:0.78rem;">${i + 1}</td>
+      <td>${dateStr}</td>
+      <td style="color:#aaa;">${timeStr}</td>
+      <td style="font-weight:600;">${safeName}</td>
+      <td>${badge}</td>
+      <td style="font-size:0.82rem;color:#777;">${confPct}</td>
+      <td>
+        <button class="btn-print" onclick="printResult(decodeURIComponent('${safeP}'))">
+          <i class="fas fa-print"></i> Print
+        </button>
+          <button class="btn-delete" type="button" onclick="deletePrediction(${p.id})" title="Delete this prediction" aria-label="Delete this prediction">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (rows.length > visibleCount) {
+    seeMore.style.display = 'block';
+    seeMore.innerHTML = `<i class="fas fa-chevron-down"></i> Show more (${rows.length - visibleCount} more predictions)`;
+  } else {
+    seeMore.style.display = 'none';
+  }
+}
+
+function loadMoreHistory() {
+  visibleCount += 5;
+  renderHistory();
+}
+
+function printCurrentResult() {
+  if (currentResult) printResult(JSON.stringify(currentResult));
+}
+
+// ── PRINT ──
+function printResult(rawStr) {
+  let p;
+  try { p = JSON.parse(rawStr); } catch(e) { alert('Print error'); return; }
+
+  const safeName = escapeHtml(p.name);
+  const isPos     = p.result.includes('Malaria Detected') && !p.result.includes('No');
+  const dt        = new Date(p.timestamp);
+  const dateStr   = isNaN(dt) ? p.timestamp : dt.toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const timeStr   = isNaN(dt) ? '' : dt.toLocaleTimeString('en-GB');
+  const confPct   = p.confidence ? (p.confidence * 100).toFixed(1) + '%' : 'N/A';
+  const confNum   = p.confidence ? (p.confidence * 100).toFixed(1) : '0';
+  const color     = isPos ? '#c62828' : '#2e7d32';
+  const resultTxt = isPos ? 'Malaria Predicted' : 'No Malaria Predicted';
+  const alertTxt  = isPos
+    ? 'Malaria indicators found. Please seek medical attention immediately. Visit the nearest Healthcare Facility for validation.'
+    : 'No malaria indicators found. Stay healthy and maintain good hygiene. Visit the nearest Healthcare Facility for validation.';
+
+  const w = window.open('', '_blank', 'width=820,height=980');
+  w.document.write(`<!DOCTYPE html>
+<html><head><title>Malaria Screening Report — ${safeName}</title>
+<style>
+  *{box-sizing:border-box;} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:44px;color:#193127;background:#f4f8f5;}
+  .report{max-width:760px;margin:auto;background:#fff;border:1px solid #dbe9de;border-radius:18px;padding:34px;box-shadow:0 12px 35px rgba(32,78,45,.10);}
+  .header{text-align:center;border-bottom:3px solid ${color};padding-bottom:20px;margin-bottom:28px;}
+  .logo{font-size:2.2rem;margin-bottom:6px;}
+  .header h1{color:${color};font-size:1.65rem;margin:4px 0;font-weight:800;}
+  .header p{color:#718178;font-size:0.82rem;margin:3px 0;}
+  .result-banner{text-align:center;margin:20px 0;}
+  .result-badge{display:inline-block;padding:11px 30px;border-radius:99px;font-size:1.1rem;font-weight:800;color:#fff;background:${color};box-shadow:0 7px 16px ${isPos?'rgba(198,40,40,.22)':'rgba(46,125,50,.22)'};}
+  .alert-box{background:${isPos?'#fff1f0':'#effaf1'};border:1px solid ${isPos?'#f3c5c2':'#c7e7cb'};border-left:5px solid ${color};border-radius:12px;padding:14px 18px;color:${color};font-size:0.9rem;line-height:1.7;margin:16px 0;}
+  .section{margin-bottom:22px;}
+  .section-title{font-size:0.72rem;font-weight:800;color:#607368;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;border-bottom:1px solid #dce9df;padding-bottom:7px;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .info-item{background:#f5faf6;border:1px solid #e0eee2;border-radius:10px;padding:12px 16px;}
+  .info-item .lbl{font-size:0.68rem;color:#718178;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.06em;}
+  .info-item .val{font-size:0.98rem;font-weight:700;color:#193127;}
+  .conf-track{height:8px;background:#eee;border-radius:99px;overflow:hidden;margin-top:6px;}
+  .conf-fill{height:100%;width:${confNum}%;background:${color};border-radius:99px;}
+  .disclaimer{background:#fff9e8;border:1px solid #f0dfaa;border-radius:10px;padding:13px 16px;font-size:0.78rem;color:#765c25;margin-top:20px;line-height:1.6;}
+  .footer{margin-top:28px;padding-top:14px;border-top:1px solid #eee;font-size:0.72rem;color:#bbb;text-align:center;}
+  @media print{body{padding:20px;}button{display:none;}}
+</style></head>
+<body>
+  <div class="report"><div class="header">
+  <div class="logo">🦟</div>
+  <h1>Malaria Screening Report</h1>
+  <p>Malaria Prediction Portal — AI-assisted screening report</p>
+  <p>${dateStr} &nbsp;|&nbsp; ${timeStr}</p>
+</div>
+
+<div class="result-banner">
+  <div class="result-badge">${isPos?'⚠️':'✅'} ${resultTxt}</div>
+</div>
+<div class="alert-box">${alertTxt}</div>
+
+<div class="section">
+  <div class="section-title">Patient & Screening Details</div>
+  <div class="info-grid">
+    <div class="info-item"><div class="lbl">Patient Name</div><div class="val">${safeName}</div></div>
+    <div class="info-item">
+      <div class="lbl">AI Confidence</div>
+      <div class="val">${confPct}</div>
+      <div class="conf-track"><div class="conf-fill"></div></div>
+    </div>
+    <div class="info-item"><div class="lbl">Screening Date</div><div class="val">${dateStr}</div></div>
+    <div class="info-item"><div class="lbl">Screening Time</div><div class="val">${timeStr}</div></div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <strong>⚕️ Important Notice:</strong> This report is generated by an AI screening tool and does <strong>not</strong> constitute a clinical diagnosis. Please present this report to a qualified healthcare professional for confirmation and appropriate treatment.
+</div>
+
+<div class="footer">
+  Generated by Malaria Prediction Portal &nbsp;|&nbsp; &copy; ${new Date().getFullYear()}
+</div>
+</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+// ── DROPDOWN HELPERS ──
+function toggleDropdown(id) {
+  const p = document.getElementById(id);
+  const wasOpen = p.classList.contains('open');
+  document.querySelectorAll('.dropdown-panel').forEach(x => x.classList.remove('open'));
+  if (!wasOpen) p.classList.add('open');
+}
+function closeDropdown(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dropdown-wrap'))
+    document.querySelectorAll('.dropdown-panel').forEach(x => x.classList.remove('open'));
+});
+
+// ── RESET ──
+function resetForm() {
+  document.getElementById('predictionForm').reset();
+  selectedSymptoms.clear();
+  document.querySelectorAll('.symptom-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('ageError').classList.add('d-none');
+  document.getElementById('tempError').classList.add('d-none');
+  ageInput.classList.remove('is-invalid');
+  tempInput.classList.remove('is-invalid');
+  document.getElementById('tempHint').textContent = 'Allowed: 25°C – 43°C';
+}
+
+loadHistory();
 </script>
 </body>
 </html>

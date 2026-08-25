@@ -1,78 +1,48 @@
-from flask import Flask, render_template, request, jsonify, redirect
-import pandas as pd
-import pickle
+from dotenv import load_dotenv
+load_dotenv()
+
+from flask import Flask, render_template
+from flask_login import login_required
+from routes.prediction import prediction
+from config import Config
+from extensions import (
+    db,
+    login_manager,
+    mail,
+    bcrypt,
+    migrate,
+    csrf,
+    limiter
+)
+from models import User
+from routes.auth import auth
 
 app = Flask(__name__)
+app.config.from_object(Config)
 
-# Load model and feature columns
-model = pickle.load(open('Gwatana_Benjamin_Jurima_malaria_classifier_model.pkl', 'rb'))
-feature_columns = pickle.load(open('feature_columns.pkl', 'rb'))
+# Initialize extensions
+db.init_app(app)
+login_manager.init_app(app)
+login_manager.login_view = 'auth.login'
+login_manager.login_message = ''
+mail.init_app(app)
+bcrypt.init_app(app)
+migrate.init_app(app, db)
+csrf.init_app(app)
+limiter.init_app(app)
 
-# In-memory storage for last 5 predictions
-recent_predictions = []
+# Register blueprints
+app.register_blueprint(auth)
+app.register_blueprint(prediction)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 @app.route('/')
+@login_required
 def home():
     return render_template('form.html')
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
-        # Extract data
-        name = request.form.get('name')
-        age = int(request.form.get('age'))
-        gender = request.form.get('gender')
-        temperature = float(request.form.get('temperature'))
-
-        # Initialize input dict
-        input_data = {
-            'age': age,
-            'gender': 0 if gender == 'male' else 1,
-            'temperature': temperature
-        }
-
-        # Symptoms list
-        symptoms = [
-            'fever', 'headache', 'vomiting', 'diarrhoea', 'anaemia', 'cough',
-            'convulsion', 'dizziness', 'loss_of_appetite', 'joint_pain',
-            'chills', 'sweating', 'rapid_diagnostic_test_positive'
-        ]
-
-        # Add symptoms to input_data
-        for symptom in symptoms:
-            input_data[symptom] = int(request.form.get(symptom, 0))
-
-        # Align with model features
-        input_df = pd.DataFrame([input_data])
-        input_df = input_df.reindex(columns=feature_columns, fill_value=0)
-
-        # Predict
-        prediction = model.predict(input_df)[0]
-
-        if prediction == 1:
-            result = "Malaria Detected"
-            alert = "Malaria detected! Seek medical attention immediately."
-        else:
-            result = "No Malaria Detected"
-            alert = "You appear to be malaria-free."
-
-        # Store prediction
-        recent_predictions.insert(0, {"name": name, "result": result, "alert": alert})
-        if len(recent_predictions) > 5:
-            recent_predictions.pop()
-
-        return jsonify({
-            "result": result,
-            "alert": alert,
-            "predictions": recent_predictions
-        })
-
-    except Exception as e:
-        return jsonify({"result": "Error", "alert": str(e)})
-
-@app.route('/reset')
-def reset():
-    recent_predictions.clear()
-    return redirect('/')
-
-
+if __name__ == '__main__':
+    app.run(debug=True)
