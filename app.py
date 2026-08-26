@@ -1,21 +1,20 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 from flask import Flask, render_template
 from flask_login import login_required
-from routes.prediction import prediction
+
 from config import Config
 from extensions import (
+    bcrypt,
+    csrf,
     db,
+    limiter,
     login_manager,
     mail,
-    bcrypt,
     migrate,
-    csrf,
-    limiter
+    oauth,
 )
 from models import User
 from routes.auth import auth
+from routes.prediction import prediction
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -30,6 +29,15 @@ bcrypt.init_app(app)
 migrate.init_app(app, db)
 csrf.init_app(app)
 limiter.init_app(app)
+oauth.init_app(app)
+
+oauth.register(
+    name='google',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
 
 # Register blueprints
 app.register_blueprint(auth)
