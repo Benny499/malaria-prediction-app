@@ -699,7 +699,28 @@ document.getElementById('predictionForm').addEventListener('submit', async (e) =
 
   try {
     const response = await fetch('/predict', { method: 'POST', body: formData });
+    
     const data = await response.json();
+
+    document.getElementById('loadingSpinner').style.display = 'none';
+
+    if (data.error) {
+      alert('Error: ' + data.error);
+      return;
+    }
+
+  showResult(data, patientName);
+
+  if (data.predictions) {
+    allHistory = data.predictions;
+    visibleCount = 5;
+    renderHistory();
+    document.getElementById('historyCard').style.display = 'block';
+  }
+
+// Auto-reset form after prediction
+resetForm();
+    
     document.getElementById('loadingSpinner').style.display = 'none';
 
     if (data.error) { alert('Error: ' + data.error); return; }
